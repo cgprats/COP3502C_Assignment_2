@@ -24,7 +24,7 @@ typedef struct failfish_queue {
 // Function Prototypes
 void remove_crlf(char *s); //Remove Carriage Return
 int get_next_nonblank_line(FILE *ifp, char *buf, int max_length); //Get the Next Nonblank Line from Buffer
-void print_failfish_queue(failfish_queue *q);
+void print_failfish_queue(failfish_queue *q); //Print the Queue of Failfish
 
 // Constructor Prototypes
 failfish *create_failfish(int sequence_number); //Constructor for Failfish
@@ -118,7 +118,15 @@ int get_next_nonblank_line(FILE *ifp, char *buf, int max_length) {
 }
 
 // This Function will Print a Failfish Queue
+//TODO: FINISH
 void print_failfish_queue(failfish_queue *q) {
+	failfish *currentFailfish = q->head;
+
+	//Print the Failfish Queue if it is Not Empty
+	if (currentFailfish != NULL) {
+		do {
+		} while(currentFailfish != q->head);
+	}
 }
 
 /*
@@ -136,6 +144,7 @@ failfish *create_failfish(int sequence_number) {
 }
 
 // This Function will Create and Return a New Failfish Queue
+//TODO: FINISH
 failfish_queue *create_failfish_queue(char *pondname, int n, int e, int th) {
 	failfish_queue *newFailfishQueue = malloc(sizeof(failfish_queue));
 	newFailfishQueue->pondname = strdup(pondname);
@@ -154,8 +163,25 @@ failfish_queue *create_failfish_queue(char *pondname, int n, int e, int th) {
 
 // This Function will Destroy a Failfish that was Constructed
 void dispose_failfish(failfish *delFailfish) {
+	free(delFailfish);
 }
 
 // This Function will Destroy a Failfish Queue that was Constructed
 void dispose_failfish_queue(failfish_queue *delFailfishQueue) {
+	failfish *currentFailfish = delFailfishQueue->head;
+	failfish *nextFailfish;
+
+	//Empty the Failfish Queue if it is Not Empty
+	if (currentFailfish != NULL) {
+		//Empty the Failfish Queue
+		do {
+			nextFailfish = currentFailfish->next;
+			dispose_failfish(currentFailfish);
+			currentFailfish = nextFailfish;
+		} while (currentFailfish != delFailfishQueue->head);
+	}
+
+	//Free the List itself Once it is Empty
+	free(delFailfishQueue->pondname);
+	free(delFailfishQueue);
 }
