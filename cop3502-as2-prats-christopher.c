@@ -24,6 +24,7 @@ typedef struct failfish_queue {
 // Function Prototypes
 void remove_crlf(char *s); //Remove Carriage Return
 int get_next_nonblank_line(FILE *ifp, char *buf, int max_length); //Get the Next Nonblank Line from Buffer
+void initialize_ponds(FILE *ifp, failfish_queue **ponds); //Initialize the List of Ponds
 void print_failfish_queue(failfish_queue *q); //Print the Queue of Failfish
 
 // Constructor Prototypes
@@ -33,6 +34,7 @@ failfish_queue *create_failfish_queue(char *pondname, int n, int e, int th); //C
 // Destructor Prototypes
 void dispose_failfish(failfish *delFailfish); //Destructor for Failfish
 void dispose_failfish_queue(failfish_queue *delFailfishQueue); //Destructor for Failfish Queues
+void dispose_ponds_list(failfish_queue **ponds); //Destructor for the Ponds List
 
 // The Main Function
 int main() {
@@ -42,6 +44,15 @@ int main() {
 	//Set the Input File to ifp and the Output File to ofp
 	FILE *ifp = fopen("cop3502-as2-input.txt", "r");
 	FILE *ofp = fopen("cop3502-as2-output-prats-christopher.txt", "w");
+
+	//Create the List of Ponds
+	failfish_queue **ponds = calloc(10, sizeof(failfish_queue));
+
+	//Initialize the List of Ponds
+	initialize_ponds(ifp, ponds);
+
+	//Dispose of the Ponds List
+	dispose_ponds_list(ponds);
 
 	//Close the Input and Output Files Prior to Exit
 	fclose(ifp);
@@ -117,6 +128,30 @@ int get_next_nonblank_line(FILE *ifp, char *buf, int max_length) {
 	}
 }
 
+// This Function will Initialize the List of Ponds
+void initialize_ponds(FILE *ifp, failfish_queue **ponds) {
+	//Get the Number of Ponds in Use
+	char buf[256];
+	get_next_nonblank_line(ifp, buf, 255);
+	remove_crlf(buf);
+	int nPonds = atoi(buf);
+
+	//Create the Failfish Queue (Ponds) from the File
+	for (int i = 0; i < nPonds; i++) {
+		//Read the Failfish Queue Information into the Buffer
+		get_next_nonblank_line(ifp, buf, 255);
+		remove_crlf(buf);
+
+		//Convert the Buffer's Data into Variables
+		int g, n, e, th;
+		char pondname[256];
+		sscanf(buf, "%d %s %d %d %d", &g, pondname, &n, &e, &th);
+
+		//Add the Failfish Queue into the Ponds List
+		ponds[g - 1] = create_failfish_queue(pondname, n, e, th);
+	}
+}
+
 // This Function will Print a Failfish Queue
 //TODO: FINISH
 void print_failfish_queue(failfish_queue *q) {
@@ -184,4 +219,14 @@ void dispose_failfish_queue(failfish_queue *delFailfishQueue) {
 	//Free the List itself Once it is Empty
 	free(delFailfishQueue->pondname);
 	free(delFailfishQueue);
+}
+
+// This Function will Destroy a Ponds List that was Constructed
+void dispose_ponds_list(failfish_queue **ponds) {
+	for (int i = 0; i < 10; i++) {
+		if (ponds[i] != NULL) {
+			dispose_failfish_queue(ponds[i]);
+		}
+	}
+	free(ponds);
 }
