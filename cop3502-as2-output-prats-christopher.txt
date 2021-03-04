@@ -1,0 +1,68 @@
+Initial Pond Status
+1 failure 1 2 3 4 5 6 7 8 9 10 
+3 doomed 1 2 3 4 5 6 7 8 
+4 mishap 1 2 3 4 5 6 7 
+6 futility 1 2 3 4 5 
+7 sisyphean 1 2 3 4 5 6 7 8 9 
+
+First Course
+
+Pond 1: failure
+Failfish 3 eaten
+Failfish 6 eaten
+Failfish 9 eaten
+Failfish 2 eaten
+Failfish 7 eaten
+Failfish 1 eaten
+Failfish 8 eaten
+Failfish 5 eaten
+
+Pond 3: doomed
+Failfish 2 eaten
+Failfish 4 eaten
+Failfish 6 eaten
+Failfish 8 eaten
+Failfish 3 eaten
+Failfish 7 eaten
+Failfish 5 eaten
+
+Pond 4: mishap
+Failfish 3 eaten
+Failfish 6 eaten
+Failfish 2 eaten
+Failfish 7 eaten
+
+Pond 6: futility
+Failfish 2 eaten
+Failfish 4 eaten
+
+Pond 7: sisyphean
+Failfish 2 eaten
+Failfish 4 eaten
+Failfish 6 eaten
+Failfish 8 eaten
+Failfish 1 eaten
+
+End of Course Pond Status
+1 failure 4 10 
+3 doomed 1 
+4 mishap 1 4 5 
+6 futility 1 3 5 
+7 sisyphean 3 5 7 9 
+
+Second Course
+
+Eaten: Failfish 4 from pond 1
+Eaten: Failfish 10 from pond 1
+Eaten: Failfish 3 from pond 7
+Eaten: Failfish 5 from pond 7
+Eaten: Failfish 7 from pond 7
+Eaten: Failfish 9 from pond 7
+Eaten: Failfish 1 from pond 3
+Eaten: Failfish 1 from pond 4
+Eaten: Failfish 4 from pond 4
+Eaten: Failfish 5 from pond 4
+Eaten: Failfish 1 from pond 6
+Eaten: Failfish 3 from pond 6
+
+Failfish 5 from pond 6 remains

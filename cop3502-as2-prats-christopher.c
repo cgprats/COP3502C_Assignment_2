@@ -27,12 +27,12 @@ typedef struct failfish_queue_struct failfish_queue;
 void remove_crlf(char *s); //Remove Carriage Return
 int get_next_nonblank_line(FILE *ifp, char *buf, int max_length); //Get the Next Nonblank Line from Buffer
 void initialize_ponds(FILE *ifp, failfish_queue **ponds); //Initialize the List of Ponds
-void print_failfish_queue(failfish_queue *q); //Print the Queue of Failfish
-void print_pond_status(failfish_queue **ponds); //Print the Current Status of All Ponds
-void first_course(failfish_queue *q); //Execute the Logic for the First Course
-void run_first_course(failfish_queue **ponds); //Run the First Course from a List of Ponds
+void print_failfish_queue(FILE *ofp, failfish_queue *q); //Print the Queue of Failfish
+void print_pond_status(FILE *ofp, failfish_queue **ponds); //Print the Current Status of All Ponds
+void first_course(FILE *ofp, failfish_queue *q); //Execute the Logic for the First Course
+void run_first_course(FILE *ofp, failfish_queue **ponds); //Run the First Course from a List of Ponds
 void second_course(failfish_queue *q); //Execute the Logic for the Second Course
-void run_second_course(failfish_queue **ponds); //Run the Second Course from a List of Ponds
+void run_second_course(FILE *ofp, failfish_queue **ponds); //Run the Second Course from a List of Ponds
 int calculate_remaining_failfish(failfish_queue **ponds); //Calculate the Remaining Number of Failfish
 int index_of_removal_head(failfish_queue **ponds); //Determine which Head to Remove
 
@@ -61,20 +61,18 @@ int main() {
 	initialize_ponds(ifp, ponds);
 
 	//Print the Initial Pond Status
-	printf("Initial Pond Status\n");
-	print_pond_status(ponds);
+	fprintf(ofp, "Initial Pond Status\n");
+	print_pond_status(ofp, ponds);
 
 	//Run the First Course
-	printf("\nFirst Course\n");
-	run_first_course(ponds);
+	run_first_course(ofp, ponds);
 
 	//Print the Status After the First Course
-	printf("\nEnd of Course Pond Status\n");
-	print_pond_status(ponds);
+	fprintf(ofp, "\nEnd of Course Pond Status\n");
+	print_pond_status(ofp, ponds);
 
 	//Run the Second Course
-	printf("\nSecond Course\n");
-	run_second_course(ponds);
+	run_second_course(ofp, ponds);
 
 	//Dispose of the Ponds List
 	dispose_ponds_list(ponds);
@@ -178,33 +176,33 @@ void initialize_ponds(FILE *ifp, failfish_queue **ponds) {
 }
 
 // This Function will Print a Failfish Queue
-void print_failfish_queue(failfish_queue *q) {
+void print_failfish_queue(FILE *ofp, failfish_queue *q) {
 	failfish *currentFailfish = q->head;
-	printf("%s ", q->pondname);
+	fprintf(ofp, "%s ", q->pondname);
 
 	//Print the Failfish Queue if it is Not Empty
 	if (currentFailfish != NULL) {
 		do {
-			printf("%d ", currentFailfish->sequence_number);
+			fprintf(ofp, "%d ", currentFailfish->sequence_number);
 			currentFailfish = currentFailfish->next;
 		} while(currentFailfish != q->head);
 	}
-	printf("\n");
+	fprintf(ofp, "\n");
 }
 
 // This Function will Print the Current Status of All Ponds
-void print_pond_status(failfish_queue **ponds) {
+void print_pond_status(FILE *ofp, failfish_queue **ponds) {
 	for (int i = 0; i < 10; i++) {
 		//Only Print Ponds with Failfish
 		if (ponds[i] != NULL) {
-			printf("%d ", i + 1);
-			print_failfish_queue(ponds[i]);
+			fprintf(ofp, "%d ", i + 1);
+			print_failfish_queue(ofp, ponds[i]);
 		}
 	}
 }
 
 // This Function will Execute the Logic on a Failgroup for the First Run
-void first_course(failfish_queue *q) {
+void first_course(FILE *ofp, failfish_queue *q) {
 	failfish *currentFailfish = q->head;
 	failfish *delFailfish;
 
@@ -212,7 +210,7 @@ void first_course(failfish_queue *q) {
 	for (int i = 1; q->n > q->th; i++) {
 		if (i % q->e == 0) {
 			//Print the Falifish that is being Eaten
-			printf("Failfish %d eaten\n", currentFailfish->sequence_number);
+			fprintf(ofp, "Failfish %d eaten\n", currentFailfish->sequence_number);
 
 			//Reduce the Number of Failfish in the Queue
 			q->n--;
@@ -241,11 +239,12 @@ void first_course(failfish_queue *q) {
 }
 
 // This Function will Run the First Course from a List of Ponds
-void run_first_course(failfish_queue **ponds) {
+void run_first_course(FILE *ofp, failfish_queue **ponds) {
+	fprintf(ofp, "\nFirst Course\n");
 	for (int i = 0; i < 10; i++) {
 		if (ponds[i] != NULL) {
-			printf("\nPond %d: %s\n", i + 1, ponds[i]->pondname);
-			first_course(ponds[i]);
+			fprintf(ofp, "\nPond %d: %s\n", i + 1, ponds[i]->pondname);
+			first_course(ofp, ponds[i]);
 		}
 	}
 }
@@ -253,8 +252,13 @@ void run_first_course(failfish_queue **ponds) {
 // This Function Executes the Logic on a Failgroup for the Second Run
 void second_course(failfish_queue *q) {
 	if (q->head == q->tail) {
-		printf("head is tail\n");
-		q->head->sequence_number = -1000;
+		dispose_failfish(q->head);
+		q->head->prev = NULL;
+		q->head->next = NULL;
+		q->head = NULL;
+		q->tail = NULL;
+		q->n--;
+		dispose_failfish_queue(q);
 	}
 	else {
 		q->n--;
@@ -269,7 +273,9 @@ void second_course(failfish_queue *q) {
 }
 
 // This Function will Run the Second Course from a List of Ponds
-void run_second_course(failfish_queue **ponds) {
+void run_second_course(FILE *ofp, failfish_queue **ponds) {
+	fprintf(ofp, "\nSecond Course\n\n");
+
 	//Find the Total Number of Remaining Failfish
 	int remainingFailfish = calculate_remaining_failfish(ponds);
 	int removeIndex;
@@ -277,7 +283,7 @@ void run_second_course(failfish_queue **ponds) {
 	//Execute the Second Course until there is 1 Failfish Left
 	while (remainingFailfish > 1) {
 		removeIndex = index_of_removal_head(ponds);
-		printf("Eaten: Failfish %d from pond %d\n", ponds[removeIndex]->head->sequence_number, removeIndex + 1);
+		fprintf(ofp, "Eaten: Failfish %d from pond %d\n", ponds[removeIndex]->head->sequence_number, removeIndex + 1);
 		second_course(ponds[removeIndex]);
 		remainingFailfish--;
 	}
@@ -287,7 +293,7 @@ void run_second_course(failfish_queue **ponds) {
 		if (ponds[i] != NULL) {
 			//From the Only Pond with Any Failfish
 			if (ponds[i]->n > 0) {
-				printf("Failfish %d from pond %d remains\n", ponds[i]->head->sequence_number, i + 1);
+				fprintf(ofp, "\nFailfish %d from pond %d remains\n", ponds[i]->head->sequence_number, i + 1);
 				break;
 			}
 		}
@@ -318,7 +324,7 @@ int index_of_removal_head(failfish_queue **ponds) {
 	 * Selected in a Tie
 	 */
 	for (int i = 0; i < 10; i++) {
-		if (ponds[i] != NULL) {
+		if (ponds[i] != NULL && ponds[i]->head != NULL) {
 			/*
 			 * If the Value of the Current Head is Larger than the Current
 			 * Highest Value, Set it's Head Value to highestNum and set it's
