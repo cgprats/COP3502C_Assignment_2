@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "leak_detector_c.h"
+#include <unistd.h> //TODO: REMOVE THIS
 
 // Structs
 // This is the Failfish Struct
@@ -29,6 +30,8 @@ int get_next_nonblank_line(FILE *ifp, char *buf, int max_length); //Get the Next
 void initialize_ponds(FILE *ifp, failfish_queue **ponds); //Initialize the List of Ponds
 void print_failfish_queue(failfish_queue *q); //Print the Queue of Failfish
 void print_pond_status(failfish_queue **ponds); //Print the Current Status of All Ponds
+void first_course(failfish_queue *q); //Execute the Logic for the First Course
+void run_first_course(failfish_queue **ponds); //Run the First Course from a List of Ponds
 
 // Constructor Prototypes
 failfish *create_failfish(int sequence_number); //Constructor for Failfish
@@ -59,14 +62,15 @@ int main() {
 	print_pond_status(ponds);
 
 	//Run the First Course
-	printf("First Course\n");
+	printf("\nFirst Course\n");
+	run_first_course(ponds);
 
 	//Print the Status After the First Course
-	printf("End of Course Pond Status");
+	printf("\nEnd of Course Pond Status\n");
 	print_pond_status(ponds);
 
 	//Run the Second Course
-	printf("Second Course\n");
+	printf("\nSecond Course\n");
 
 	//Dispose of the Ponds List
 	dispose_ponds_list(ponds);
@@ -191,6 +195,53 @@ void print_pond_status(failfish_queue **ponds) {
 		if (ponds[i] != NULL) {
 			printf("%d ", i + 1);
 			print_failfish_queue(ponds[i]);
+		}
+	}
+}
+
+// This Function will Execute the Logic on a Failgroup for the First Run
+void first_course(failfish_queue *q) {
+	failfish *currentFailfish = q->head;
+	failfish *delFailfish;
+
+	//Execute the Logic while the Number of Failfish is above the Threshold
+	for (int i = 1; q->n > q->th; i++) {
+		if (i % q->e == 0) {
+			//Print the Falifish that is being Eaten
+			printf("Failfish %d eaten\n", currentFailfish->sequence_number);
+
+			//Reduce the Number of Failfish in the Queue
+			q->n--;
+
+			//Remove the Eaten Failfish from the Queue
+			currentFailfish->prev->next = currentFailfish->next;
+			currentFailfish->next->prev = currentFailfish->prev;
+			delFailfish = currentFailfish;
+			currentFailfish = delFailfish->prev;
+
+			//Set the New Head if Needed
+			if (q->head == delFailfish) {
+				q->head = currentFailfish->next;
+			}
+
+			//Set the New Tail if Needed
+			else if (q->tail == delFailfish) {
+				q->tail = currentFailfish;
+			}
+
+			//Dispose of the Eaten Failfish
+			dispose_failfish(delFailfish);
+		}
+		currentFailfish = currentFailfish->next;
+	}
+}
+
+// This Function will Run the First Course from a List of Ponds
+void run_first_course(failfish_queue **ponds) {
+	for (int i = 0; i < 10; i++) {
+		if (ponds[i] != NULL) {
+			printf("\nPond %d: %s\n", i + 1, ponds[i]->pondname);
+			first_course(ponds[i]);
 		}
 	}
 }
