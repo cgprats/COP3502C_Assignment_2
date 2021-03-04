@@ -5,27 +5,30 @@
 
 // Structs
 // This is the Failfish Struct
-typedef struct failfish {
+struct failfish_struct {
 	int sequence_number;
-	struct failfish *next;
-	struct failfish *prev;
-} failfish;
+	struct failfish_struct *next;
+	struct failfish_struct *prev;
+};
+typedef struct failfish_struct failfish;
 
 // This is the Failfish Queue (aka Pond) Struct
-typedef struct failfish_queue {
+struct failfish_queue_struct {
 	char *pondname;
 	int n;
 	int e;
 	int th;
 	failfish *head;
 	failfish *tail;
-} failfish_queue;
+};
+typedef struct failfish_queue_struct failfish_queue;
 
 // Function Prototypes
 void remove_crlf(char *s); //Remove Carriage Return
 int get_next_nonblank_line(FILE *ifp, char *buf, int max_length); //Get the Next Nonblank Line from Buffer
 void initialize_ponds(FILE *ifp, failfish_queue **ponds); //Initialize the List of Ponds
 void print_failfish_queue(failfish_queue *q); //Print the Queue of Failfish
+void print_pond_status(failfish_queue **ponds); //Print the Current Status of All Ponds
 
 // Constructor Prototypes
 failfish *create_failfish(int sequence_number); //Constructor for Failfish
@@ -50,6 +53,20 @@ int main() {
 
 	//Initialize the List of Ponds
 	initialize_ponds(ifp, ponds);
+
+	//Print the Initial Pond Status
+	printf("Initial Pond Status\n");
+	print_pond_status(ponds);
+
+	//Run the First Course
+	printf("First Course\n");
+
+	//Print the Status After the First Course
+	printf("End of Course Pond Status");
+	print_pond_status(ponds);
+
+	//Run the Second Course
+	printf("Second Course\n");
 
 	//Dispose of the Ponds List
 	dispose_ponds_list(ponds);
@@ -153,14 +170,28 @@ void initialize_ponds(FILE *ifp, failfish_queue **ponds) {
 }
 
 // This Function will Print a Failfish Queue
-//TODO: FINISH
 void print_failfish_queue(failfish_queue *q) {
 	failfish *currentFailfish = q->head;
+	printf("%s ", q->pondname);
 
 	//Print the Failfish Queue if it is Not Empty
 	if (currentFailfish != NULL) {
 		do {
+			printf("%d ", currentFailfish->sequence_number);
+			currentFailfish = currentFailfish->next;
 		} while(currentFailfish != q->head);
+	}
+	printf("\n");
+}
+
+// This Function will Print the Current Status of All Ponds
+void print_pond_status(failfish_queue **ponds) {
+	for (int i = 0; i < 10; i++) {
+		//Only Print Ponds with Failfish
+		if (ponds[i] != NULL) {
+			printf("%d ", i + 1);
+			print_failfish_queue(ponds[i]);
+		}
 	}
 }
 
@@ -179,7 +210,6 @@ failfish *create_failfish(int sequence_number) {
 }
 
 // This Function will Create and Return a New Failfish Queue
-//TODO: FINISH
 failfish_queue *create_failfish_queue(char *pondname, int n, int e, int th) {
 	failfish_queue *newFailfishQueue = malloc(sizeof(failfish_queue));
 	newFailfishQueue->pondname = strdup(pondname);
@@ -188,6 +218,31 @@ failfish_queue *create_failfish_queue(char *pondname, int n, int e, int th) {
 	newFailfishQueue->th = th;
 	newFailfishQueue->head = NULL;
 	newFailfishQueue->tail = NULL;
+
+	//Create the Failfish that are Part of the Queue
+	failfish *newFailfish;
+	for (int i = newFailfishQueue->n; i > 0; i--) {
+		//Set the Last Failfish
+		if (i == newFailfishQueue->n) {
+			newFailfish = create_failfish(i);
+			newFailfishQueue->head = newFailfish;
+			newFailfishQueue->tail = newFailfish;
+			newFailfish->prev = newFailfish;
+			newFailfish->next = newFailfish;
+		}
+
+		//Set the Other Failfish in the Queue
+		else {
+			newFailfish = create_failfish(i);
+			newFailfish->next = newFailfishQueue->head;
+			newFailfish->prev = newFailfishQueue->tail;
+			newFailfishQueue->head->prev = newFailfish;
+			newFailfishQueue->tail->next = newFailfish;
+			newFailfishQueue->head = newFailfish;
+		}
+	}
+
+	//Return the Created Failfish Queue
 	return newFailfishQueue;
 }
 
