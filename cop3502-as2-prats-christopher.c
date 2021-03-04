@@ -213,7 +213,7 @@ void dequeue(failfish_queue *q, failfish *f) {
 		q->head = NULL;
 		q->tail = NULL;
 		dispose_failfish(f);
-		dispose_failfish_queue(q);
+		//dispose_failfish_queue(q);
 		return;
 	}
 
