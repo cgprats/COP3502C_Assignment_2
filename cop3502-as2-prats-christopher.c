@@ -253,7 +253,7 @@ int is_empty(failfish_queue *q) {
 		q->n = 0;
 		return 1;
 	}
-	
+
 	//Otherwise, Return False
 	else {
 		return 0;

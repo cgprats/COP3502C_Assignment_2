@@ -7,4 +7,4 @@ steps:
           image: gcc
           commands:
                   - make
-                  - out/as2.out
+                  - gdb --ex "run" -ex "bt" out/as2.out
