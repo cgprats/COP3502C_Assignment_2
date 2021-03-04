@@ -33,6 +33,8 @@ void first_course(failfish_queue *q); //Execute the Logic for the First Course
 void run_first_course(failfish_queue **ponds); //Run the First Course from a List of Ponds
 void second_course(failfish_queue *q); //Execute the Logic for the Second Course
 void run_second_course(failfish_queue **ponds); //Run the Second Course from a List of Ponds
+int calculate_remaining_failfish(failfish_queue **ponds); //Calculate the Remaining Number of Failfish
+int index_of_removal_head(failfish_queue **ponds); //Determine which Head to Remove
 
 // Constructor Prototypes
 failfish *create_failfish(int sequence_number); //Constructor for Failfish
@@ -250,12 +252,87 @@ void run_first_course(failfish_queue **ponds) {
 
 // This Function Executes the Logic on a Failgroup for the Second Run
 void second_course(failfish_queue *q) {
+	if (q->head == q->tail) {
+		printf("head is tail\n");
+		q->head->sequence_number = -1000;
+	}
+	else {
+		q->n--;
+		failfish *delFailfish = q->head;
+		delFailfish->prev->next = delFailfish->next;
+		delFailfish->next->prev = delFailfish->prev;
+		q->head = delFailfish->next;
+		q->head->prev = q->tail;
+		q->tail->next = q->head;
+		dispose_failfish(delFailfish);
+	}
 }
 
 // This Function will Run the Second Course from a List of Ponds
 void run_second_course(failfish_queue **ponds) {
+	//Find the Total Number of Remaining Failfish
+	int remainingFailfish = calculate_remaining_failfish(ponds);
+	int removeIndex;
+
+	//Execute the Second Course until there is 1 Failfish Left
+	while (remainingFailfish > 1) {
+		removeIndex = index_of_removal_head(ponds);
+		printf("Eaten: Failfish %d from pond %d\n", ponds[removeIndex]->head->sequence_number, removeIndex + 1);
+		second_course(ponds[removeIndex]);
+		remainingFailfish--;
+	}
+
+	//Print the Remaining Failfish
+	for (int i = 0; i < 10; i++) {
+		if (ponds[i] != NULL) {
+			//From the Only Pond with Any Failfish
+			if (ponds[i]->n > 0) {
+				printf("Failfish %d from pond %d remains\n", ponds[i]->head->sequence_number, i + 1);
+				break;
+			}
+		}
+	}
 }
 
+// This Function will Calculate the Number of Failfish Remaining in a Pond
+int calculate_remaining_failfish(failfish_queue **ponds) {
+	int remainingFailfish = 0;
+
+	//Calculate the Number of Failfish in Each Failgroup
+	for (int i = 0; i < 10; i++) {
+		if (ponds[i] != NULL) {
+			remainingFailfish += ponds[i]->n;
+		}
+	}
+
+	return remainingFailfish;
+}
+
+// This Function will Determine which Head to Remove in the Second Course
+int index_of_removal_head(failfish_queue **ponds) {
+	int highestNum = -1;
+	int removeIndex;
+
+	/*
+	 * Start from the Lowest to the Highest Failgroup Id to Ensure that the Lowest Id is
+	 * Selected in a Tie
+	 */
+	for (int i = 0; i < 10; i++) {
+		if (ponds[i] != NULL) {
+			/*
+			 * If the Value of the Current Head is Larger than the Current
+			 * Highest Value, Set it's Head Value to highestNum and set it's
+			 * index to the Remove index.
+			 */
+			if (ponds[i]->head->sequence_number > highestNum) {
+				highestNum = ponds[i]->head->sequence_number;
+				removeIndex = i;
+			}
+		}
+	}
+
+	return removeIndex;
+}
 
 /*
  * This section includes the functions for constructing the various
