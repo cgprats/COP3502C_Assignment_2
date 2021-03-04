@@ -212,7 +212,6 @@ void dequeue(failfish_queue *q, failfish *f) {
 	if ((q->head == q->tail) && q->head == f) {
 		q->head = NULL;
 		q->tail = NULL;
-		return;
 	}
 
 	else if (q->head == f) {
