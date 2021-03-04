@@ -2,7 +2,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include "leak_detector_c.h"
-#include <unistd.h> //TODO: REMOVE THIS
 
 // Structs
 // This is the Failfish Struct
@@ -32,6 +31,8 @@ void print_failfish_queue(failfish_queue *q); //Print the Queue of Failfish
 void print_pond_status(failfish_queue **ponds); //Print the Current Status of All Ponds
 void first_course(failfish_queue *q); //Execute the Logic for the First Course
 void run_first_course(failfish_queue **ponds); //Run the First Course from a List of Ponds
+void second_course(failfish_queue *q); //Execute the Logic for the Second Course
+void run_second_course(failfish_queue **ponds); //Run the Second Course from a List of Ponds
 
 // Constructor Prototypes
 failfish *create_failfish(int sequence_number); //Constructor for Failfish
@@ -71,6 +72,7 @@ int main() {
 
 	//Run the Second Course
 	printf("\nSecond Course\n");
+	run_second_course(ponds);
 
 	//Dispose of the Ponds List
 	dispose_ponds_list(ponds);
@@ -245,6 +247,15 @@ void run_first_course(failfish_queue **ponds) {
 		}
 	}
 }
+
+// This Function Executes the Logic on a Failgroup for the Second Run
+void second_course(failfish_queue *q) {
+}
+
+// This Function will Run the Second Course from a List of Ponds
+void run_second_course(failfish_queue **ponds) {
+}
+
 
 /*
  * This section includes the functions for constructing the various
