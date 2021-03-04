@@ -7,3 +7,4 @@ steps:
           image: gcc
           commands:
                   - make
+                  - out/as2.out
