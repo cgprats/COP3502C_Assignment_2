@@ -3,6 +3,12 @@
 #include <string.h>
 #include "leak_detector_c.h"
 
+/*
+ * NOTE: Some of the Logic Used in Functions are Based on the Code Available under In-Class Code
+ * in the Files Section of WebCourses. All Applicable Credit for this logic
+ * Goes to the Instructor, Matthew Gerber
+ */
+
 // Structs
 // This is the Failfish Struct
 struct failfish_struct {
@@ -27,6 +33,10 @@ typedef struct failfish_queue_struct failfish_queue;
 void remove_crlf(char *s); //Remove Carriage Return
 int get_next_nonblank_line(FILE *ifp, char *buf, int max_length); //Get the Next Nonblank Line from Buffer
 void initialize_ponds(FILE *ifp, failfish_queue **ponds); //Initialize the List of Ponds
+void enqueue(failfish_queue *q, failfish *f); //Add a Failfish to the Queue
+void dequeue(failfish_queue *q, failfish *f); //Remove a Failfish from the Queue
+failfish *peek(failfish_queue *q); //Return the Head of a Queue
+int is_empty(failfish_queue *q); //Return if a Queue is Empty
 void print_failfish_queue(FILE *ofp, failfish_queue *q); //Print the Queue of Failfish
 void print_pond_status(FILE *ofp, failfish_queue **ponds); //Print the Current Status of All Ponds
 void first_course(FILE *ofp, failfish_queue *q); //Execute the Logic for the First Course
@@ -175,6 +185,79 @@ void initialize_ponds(FILE *ifp, failfish_queue **ponds) {
 	}
 }
 
+// This Function adds a Failfish to the Queue
+void enqueue(failfish_queue *q, failfish *f) {
+	/*
+	 * If the List is Empty, Set f as the Head and Tail
+	 */
+	if (q->head == NULL) {
+		q->head = f;
+		q->tail = f;
+		f->prev = f;
+		f->next = f;
+	}
+
+	//Otherwise, add it as the new head
+	else {
+		f->next = q->head;
+		f->prev = q->tail;
+		q->head->prev = f;
+		q->tail->next = f;
+		q->head = f;
+	}
+}
+
+// This Function Removes a Failfish from the Queue
+void dequeue(failfish_queue *q, failfish *f) {
+	if ((q->head == q->tail) && q->head == f) {
+		q->head = NULL;
+		q->tail = NULL;
+		dispose_failfish_queue(q);
+	}
+
+	else if (q->head == f) {
+		q->head = q->head->next;
+		q->head->prev = q->tail;
+		q->tail->next = q->head;
+	}
+
+	else if (q->tail == f) {
+		q->tail = q->tail->prev;
+		q->tail->next = q->head;
+		q->head->prev = q->tail;
+	}
+
+	else {
+		f->prev->next = f->next;
+		f->next->prev = f->prev;
+	}
+
+	//Reduce the Failfish Count in the Queue
+	q->n--;
+
+	//Dispose of the Failfish to Prevent Memory Leak
+	dispose_failfish(f);
+}
+
+// This Function Returns the Head of a Failfish Queue
+failfish *peek(failfish_queue *q) {
+	return q->head;
+}
+
+// This Function Returns if a Failfish Queue is Empty
+int is_empty(failfish_queue *q) {
+	//If the Queue is Empty, Set n to 0 and Return True
+	if (peek(q) == NULL) {
+		q->n = 0;
+		return 1;
+	}
+	
+	//Otherwise, Return False
+	else {
+		return 0;
+	}
+}
+
 // This Function will Print a Failfish Queue
 void print_failfish_queue(FILE *ofp, failfish_queue *q) {
 	failfish *currentFailfish = q->head;
@@ -212,27 +295,15 @@ void first_course(FILE *ofp, failfish_queue *q) {
 			//Print the Falifish that is being Eaten
 			fprintf(ofp, "Failfish %d eaten\n", currentFailfish->sequence_number);
 
-			//Reduce the Number of Failfish in the Queue
-			q->n--;
-
-			//Remove the Eaten Failfish from the Queue
-			currentFailfish->prev->next = currentFailfish->next;
-			currentFailfish->next->prev = currentFailfish->prev;
+			/*
+			 * Set the Deletion Failfish and Set the Current Failfish to the
+			 * Previous One to Allow Correct Execution of Logic
+			 */
 			delFailfish = currentFailfish;
 			currentFailfish = delFailfish->prev;
 
-			//Set the New Head if Needed
-			if (q->head == delFailfish) {
-				q->head = currentFailfish->next;
-			}
-
-			//Set the New Tail if Needed
-			else if (q->tail == delFailfish) {
-				q->tail = currentFailfish;
-			}
-
-			//Dispose of the Eaten Failfish
-			dispose_failfish(delFailfish);
+			//Remove the Eaten Failfish from the Queue
+			dequeue(q, delFailfish);
 		}
 		currentFailfish = currentFailfish->next;
 	}
@@ -251,25 +322,7 @@ void run_first_course(FILE *ofp, failfish_queue **ponds) {
 
 // This Function Executes the Logic on a Failgroup for the Second Run
 void second_course(failfish_queue *q) {
-	if (q->head == q->tail) {
-		dispose_failfish(q->head);
-		q->head->prev = NULL;
-		q->head->next = NULL;
-		q->head = NULL;
-		q->tail = NULL;
-		q->n--;
-		dispose_failfish_queue(q);
-	}
-	else {
-		q->n--;
-		failfish *delFailfish = q->head;
-		delFailfish->prev->next = delFailfish->next;
-		delFailfish->next->prev = delFailfish->prev;
-		q->head = delFailfish->next;
-		q->head->prev = q->tail;
-		q->tail->next = q->head;
-		dispose_failfish(delFailfish);
-	}
+	dequeue(q, peek(q));
 }
 
 // This Function will Run the Second Course from a List of Ponds
@@ -324,13 +377,13 @@ int index_of_removal_head(failfish_queue **ponds) {
 	 * Selected in a Tie
 	 */
 	for (int i = 0; i < 10; i++) {
-		if (ponds[i] != NULL && ponds[i]->head != NULL) {
+		if (ponds[i] != NULL && !is_empty(ponds[i])) {
 			/*
 			 * If the Value of the Current Head is Larger than the Current
 			 * Highest Value, Set it's Head Value to highestNum and set it's
 			 * index to the Remove index.
 			 */
-			if (ponds[i]->head->sequence_number > highestNum) {
+			if (peek(ponds[i])->sequence_number > highestNum) {
 				highestNum = ponds[i]->head->sequence_number;
 				removeIndex = i;
 			}
@@ -367,24 +420,8 @@ failfish_queue *create_failfish_queue(char *pondname, int n, int e, int th) {
 	//Create the Failfish that are Part of the Queue
 	failfish *newFailfish;
 	for (int i = newFailfishQueue->n; i > 0; i--) {
-		//Set the Last Failfish
-		if (i == newFailfishQueue->n) {
-			newFailfish = create_failfish(i);
-			newFailfishQueue->head = newFailfish;
-			newFailfishQueue->tail = newFailfish;
-			newFailfish->prev = newFailfish;
-			newFailfish->next = newFailfish;
-		}
-
-		//Set the Other Failfish in the Queue
-		else {
-			newFailfish = create_failfish(i);
-			newFailfish->next = newFailfishQueue->head;
-			newFailfish->prev = newFailfishQueue->tail;
-			newFailfishQueue->head->prev = newFailfish;
-			newFailfishQueue->tail->next = newFailfish;
-			newFailfishQueue->head = newFailfish;
-		}
+		newFailfish = create_failfish(i);
+		enqueue(newFailfishQueue, newFailfish);
 	}
 
 	//Return the Created Failfish Queue
