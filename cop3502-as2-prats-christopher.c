@@ -440,11 +440,11 @@ void dispose_failfish(failfish *delFailfish) {
 
 // This Function will Destroy a Failfish Queue that was Constructed
 void dispose_failfish_queue(failfish_queue *delFailfishQueue) {
-	failfish *currentFailfish = delFailfishQueue->head;
-	failfish *nextFailfish;
-
 	//Empty the Failfish Queue if it is Not Empty
-	if (currentFailfish != NULL) {
+	if (!is_empty(delFailfishQueue)) {
+		failfish *currentFailfish = peek(delFailfishQueue);
+		failfish *nextFailfish;
+		
 		//Empty the Failfish Queue
 		do {
 			nextFailfish = currentFailfish->next;
